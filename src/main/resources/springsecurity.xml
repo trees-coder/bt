@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/security
+    http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <security:global-method-security pre-post-annotations="enabled" jsr250-annotations="enabled" secured-annotations="enabled"></security:global-method-security>
+
+    <!-- 配置不拦截的资源 -->
+    <security:http pattern="/pages/login.jsp" security="none"/>
+    <security:http pattern="/pages/failer.jsp" security="none"/>
+    <!--
+    	配置具体的规则
+    	auto-config="true"	不用自己编写登录的页面，框架提供默认登录页面
+    	use-expressions="false"	是否使用SPEL表达式（没学习过）
+    -->
+    <security:http auto-config="true" use-expressions="true">
+        <!-- 配置具体的拦截的规则 pattern="请求路径的规则" access="访问系统的人的角色" -->
+        <security:intercept-url pattern="/**" access="hasAnyRole('ROLE_USER','ROLE_ADMIN','ROLE_HOTEL','ROLE_TOUR','ROLE_MSG')"/>
+
+        <!-- 定义跳转的具体的页面 -->
+<!--1. login-page 自定义登录页url,默认为/login
+    2. login-processing-url 登录请求拦截的url,也就是form表单提交时指定的action
+    3. default-target-url 默认登录成功后跳转的url
+    default-target-url一般用来指定登入成功后立马跳转到主界面，
+-   authentication-success-forward-url用来指定登入成功且跳到主界面后，发送请求用户其他信息的请求。一般用于default-target-url的后续请求
+-   authentication-failure-url指向一个AuthenticationFailureHandler用于处理失败的认证请求
+    -->
+        <security:form-login
+                login-page="/pages/login.jsp"
+                login-processing-url="/login.do"
+                default-target-url="/index.jsp"
+                authentication-failure-url="/pages/failer.jsp"
+                authentication-success-forward-url="/pages/main.jsp"
+        />
+
+        <!-- 关闭跨域请求 -->
+        <security:csrf disabled="true"/>
+
+        <!-- 退出 -->
+        <!--  invalidate-session 表示是否要在退出登录后让当前session失效
+              logout-success-url 指定成功退出登录后要重定向的URL
+        -->
+        <security:logout invalidate-session="true" logout-url="/logout.do" logout-success-url="/pages/login.jsp" />
+
+    </security:http>
+
+    <!-- 切换成数据库中的用户名和密码 -->
+    <security:authentication-manager>
+        <security:authentication-provider user-service-ref="userService">
+            <!-- 配置加密的方式 -->
+            <security:password-encoder ref="MD5PasswordEncoder"/>
+        </security:authentication-provider>
+    </security:authentication-manager>
+
+    <!-- 配置加密类 -->
+    <bean id="MD5PasswordEncoder" class="com.admin.util.MD5PasswordEncoder"/>
+</beans>
+
+
+
+
+
+
+
+
+
+
+
+
